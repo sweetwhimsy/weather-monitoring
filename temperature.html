@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Temperature - Weather Monitoring</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #00ff00;
+      overflow-y: auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.8);
+      color: #00ff00;
+      padding: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      text-shadow: 0 0 20px #00ff00;
+    }
+
+    .home-button {
+      background: linear-gradient(90deg, #00ff00, #00cc00);
+      color: #ff9900;
+      border: none;
+      border-radius: 5px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .home-button:hover {
+      background: linear-gradient(90deg, #00cc00, #00ff00);
+      transform: translateY(-2px);
+    }
+
+    .container {
+      width: 90%;
+      margin: 40px auto;
+      max-width: 1000px;
+    }
+
+    .current-temperature {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .current-temperature h2 {
+      font-size: 2em;
+      color: #ff9900;
+    }
+
+    .temperature-graph {
+      width: 100%;
+      height: 400px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #00ff00;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #00ff00;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="home-button" onclick="window.location.href='index.html'">&#127968; Home</button>
+    <h1>Temperature Monitoring</h1>
+  </header>
+
+  <div class="container">
+    <!-- Display current temperature -->
+    <div class="current-temperature">
+      <h2>Current Temperature</h2>
+      <p id="current-temp">Loading...</p>
+    </div>
+
+    <!-- Display temperature graph -->
+    <div class="temperature-graph">
+      <canvas id="temperatureChart"></canvas>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2024 WeatherMonitor | Designed for ESP32 Integration</p>
+  </footer>
+
+  <script>
+    // Set your ThingSpeak API URL
+    const API_URL = 'https://api.thingspeak.com/channels/2748580/feeds.json?api_key=WG7P3NYE11GCRDQ1&results=10';
+
+    // Fetch the temperature data
+    async function fetchTemperatureData() {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        const feeds = data.feeds;
+
+        if (feeds.length > 0) {
+          // Extract the latest temperature value and display it
+          const latestFeed = feeds[feeds.length - 1];
+          const currentTemperature = latestFeed.field1; // assuming temperature is field1
+
+          document.getElementById('current-temp').textContent = `${currentTemperature} °C`;
+
+          // Prepare data for the graph
+          const timeStamps = feeds.map(feed => feed.created_at);
+          const temperatures = feeds.map(feed => feed.field1);
+
+          updateGraph(timeStamps, temperatures);
+        }
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+      }
+    }
+
+    // Update the temperature graph
+    function updateGraph(labels, data) {
+      const ctx = document.getElementById('temperatureChart').getContext('2d');
+
+      const temperatureChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Temperature (°C)',
+            data: data,
+            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+            borderColor: '#00ff00',
+            borderWidth: 2,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'minute',
+                tooltipFormat: 'll HH:mm'
+              },
+              title: {
+                display: true,
+                text: 'Time'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Temperature (°C)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Fetch and display temperature data when page loads
+    fetchTemperatureData();
+  </script>
+</body>
+</html>

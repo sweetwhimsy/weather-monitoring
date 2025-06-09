@@ -1,0 +1,212 @@
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Harmful-Gases Data</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000;
+            color: #00ff00;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Harmful-Gases Data</h1>
+        <button onclick="window.location.href='index.html'">Back to Home</button>
+    </header>
+
+    <main>
+        <h2>Current Harmful-Gases</h2>
+        <p id="harmful-gases-value">Loading...</p>
+    </main>
+
+    <footer>
+        <p>© 2024 WeatherMonitor | Designed for ESP32 Integration</p>
+    </footer>
+
+    <script>
+        // Example JavaScript to fetch temperature data
+        async function fetchHarmfulGasesData() {
+            try {
+                const response = await fetch('/api/harmful-gases'); // Adjust the API endpoint as needed
+                const data = await response.json();
+                document.getElementById('harmful-gases-value').innerText = data.harmful-gases || 'N/A';
+            } catch (error) {
+                console.error('Error fetching harmful-gases data:', error);
+                document.getElementById('harmful-gases-value').innerText = 'Error fetching data';
+            }
+        }
+
+        // Fetch data on page load
+        fetchHarmfulGasesData();
+    </script>
+</body>
+</html>
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Harmful-Gases Data</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000;
+            color: #00ff00;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .gas-level {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        .safe {
+            color: #00ff00;
+        }
+        .moderate {
+            color: #ffff00;
+        }
+        .dangerous {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Harmful-Gases Data</h1>
+        <button onclick="window.location.href='index.html'">Back to Home</button>
+    </header>
+
+    <main>
+        <h2>Current Gas Levels</h2>
+        <div id="gas-data">
+            <div class="gas-level">
+                <h3>Carbon Monoxide (CO)</h3>
+                <p id="co-value">Loading...</p>
+            </div>
+            <div class="gas-level">
+                <h3>Nitrogen Dioxide (NO₂)</h3>
+                <p id="no2-value">Loading...</p>
+            </div>
+            <div class="gas-level">
+                <h3>Ozone (O₃)</h3>
+                <p id="o3-value">Loading...</p>
+            </div>
+        </div>
+        <p id="data-source" style="font-size: 0.8em; color: #666;"></p>
+    </main>
+
+    <footer>
+        <p>© 2024 WeatherMonitor | Designed for ESP32 Integration</p>
+    </footer>
+
+    <script>
+        // Function to generate random gas levels with realistic ranges
+        function generateRandomGasLevels() {
+            return {
+                co: (Math.random() * 50).toFixed(2) + ' ppm',      // CO typically 0-50 ppm
+                no2: (Math.random() * 2).toFixed(2) + ' ppm',      // NO₂ typically 0-2 ppm
+                o3: (Math.random() * 0.2).toFixed(2) + ' ppm'      // O₃ typically 0-0.2 ppm
+            };
+        }
+
+        // Function to determine safety level and apply styling
+        function setSafetyLevel(element, value, type) {
+            element.classList.remove('safe', 'moderate', 'dangerous');
+            
+            if (type === 'co') {
+                if (value < 9) element.classList.add('safe');
+                else if (value < 35) element.classList.add('moderate');
+                else element.classList.add('dangerous');
+            } 
+            else if (type === 'no2') {
+                if (value < 0.05) element.classList.add('safe');
+                else if (value < 0.5) element.classList.add('moderate');
+                else element.classList.add('dangerous');
+            }
+            else if (type === 'o3') {
+                if (value < 0.05) element.classList.add('safe');
+                else if (value < 0.1) element.classList.add('moderate');
+                else element.classList.add('dangerous');
+            }
+        }
+
+        // Function to fetch gas data
+        async function fetchHarmfulGasesData() {
+            try {
+                const response = await fetch('/api/harmful-gases');
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                
+                if (data.co && data.no2 && data.o3) {
+                    // Display real sensor data
+                    document.getElementById('co-value').innerText = data.co + ' ppm';
+                    document.getElementById('no2-value').innerText = data.no2 + ' ppm';
+                    document.getElementById('o3-value').innerText = data.o3 + ' ppm';
+                    document.getElementById('data-source').innerText = 'Data from external sensor';
+                    
+                    // Set safety levels
+                    setSafetyLevel(document.getElementById('co-value'), parseFloat(data.co), 'co');
+                    setSafetyLevel(document.getElementById('no2-value'), parseFloat(data.no2), 'no2');
+                    setSafetyLevel(document.getElementById('o3-value'), parseFloat(data.o3), 'o3');
+                } else {
+                    // If no valid data, use random values
+                    displaySimulatedData();
+                }
+            } catch (error) {
+                console.error('Error fetching harmful-gases data:', error);
+                // On error, use random values
+                displaySimulatedData();
+            }
+        }
+
+        // Function to display simulated data
+        function displaySimulatedData() {
+            const randomLevels = generateRandomGasLevels();
+            
+            document.getElementById('co-value').innerText = randomLevels.co;
+            document.getElementById('no2-value').innerText = randomLevels.no2;
+            document.getElementById('o3-value').innerText = randomLevels.o3;
+            document.getElementById('data-source').innerText = 'Simulated data (sensor not available)';
+            
+            // Set safety levels
+            setSafetyLevel(document.getElementById('co-value'), parseFloat(randomLevels.co), 'co');
+            setSafetyLevel(document.getElementById('no2-value'), parseFloat(randomLevels.no2), 'no2');
+            setSafetyLevel(document.getElementById('o3-value'), parseFloat(randomLevels.o3), 'o3');
+        }
+
+        // Fetch data on page load
+        fetchHarmfulGasesData();
+        
+        // Optional: Update data every 5 seconds
+        setInterval(fetchHarmfulGasesData, 5000);
+    </script>
+</body>
+</html>
